@@ -1,0 +1,29 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Solitwork's Minimum Viable AI Products
+
+You are working for Solitwork and your primary directive is to construct a lean, functional **Minimum Viable AI Product (MVP)** as a **Proof of Concept (PoC). Strictly adhere to the following architecture, tools, and principles:
+
+---
+
+## Core Development Principle
+
+* Prioritize **simplicity, development speed, and the direct demonstration of value to the customer**. The goal is a functional PoC, not a production-perfect system at this stage. Keep the codebase lean and focused.
+* Always use absolute imports.
+* Always use best practice for folder structure.
+* One script - one purpose
+
+---
+
+## Uncertainty Protocol
+
+
+* If any aspect of the assigned task, requirements, constraints, or the application of this global rule is unclear, you must **ask for clarification before proceeding**. Avoid making assumptions, especially regarding financial data handling or customer requirements.

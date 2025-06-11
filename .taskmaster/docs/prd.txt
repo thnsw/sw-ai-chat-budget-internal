@@ -1,0 +1,218 @@
+# Product Requirements Document: AI Budget Chat Tool (MVP)
+
+## 1. Overview
+The AI Budget Chat Tool is an interactive Minimum Viable Product (MVP) designed to provide employees with direct access to budget performance analysis through a conversational interface. Instead of navigating static reports, users can interact with a simple chat interface to receive real-time reports, insights, and recommendations.
+
+This MVP focuses on delivering a streamlined, powerful user experience using the **Vercel AI SDK** to create a chat interface where users can request specific budget analyses. The core of the system is its ability to translate raw budget and time-tracking data into clear, actionable, and context-aware responses through a conversational AI interface.
+
+The primary value proposition is the transformation of complex budget analysis from a passive, report-driven workflow into an active, on-demand conversation. This empowers users to get the specific insights they need, when they need them, improving budget adherence and facilitating faster, data-driven decisions.
+
+## 2. Core Features
+
+### Chat-based Analysis Interface
+The system's functionality is delivered through a **single chat interface** powered by the **Vercel AI SDK** using the `useChat` hook pattern. Users interact through natural language to request budget analyses, and the AI determines which analysis to perform based on the conversation context.
+
+#### Key Architectural Principles
+- **Single Chat Interface**: One unified chat UI using `useChat` from `@ai-sdk/react` for all budget analysis requests
+- **Tool-based Analysis**: AI determines and executes the appropriate analysis tool based on user requests
+- **Streaming Responses**: Real-time text responses using `streamText` from the Vercel AI SDK
+- **Structured Data Display**: Raw analysis data (Pandas DataFrames) displayed alongside AI-generated insights
+- **Natural Language Interface**: Users describe what they want to analyze rather than selecting from menus
+- **Schema-Driven Development**: `Zod` schemas define and enforce data structures for tool inputs and outputs
+
+### MVP Analysis Tools
+The MVP implements two core analysis tools that the AI can invoke based on user requests:
+
+#### 1. Executive Summary Tool
+- **Purpose**: Provides high-level budget performance overview
+- **Trigger**: User requests like "Show me an executive summary" or "How are we doing overall?"
+- **Function**: `getExecutiveSummary`
+  - Fetches and aggregates total budgeted vs billed hours
+  - Calculates key metric (budget variance)
+  - Returns structured data as JSON for display
+- **Output**:
+  - AI-generated text summary of budget health
+  - Key recommendations in natural language
+  - Raw data table displayed in the chat
+
+#### 2. Team Performance Analysis Tool
+- **Purpose**: Delivers detailed team performance breakdown
+- **Trigger**: User requests like "Analyze Team X performance" or "Show me how the development team is doing"
+- **Function**: `getTeamPerformance`
+  - Fetches billed and budgeted hours for specified team
+  - Analyzes billable vs. non-billable hours and individual performance
+  - Returns structured team metrics as JSON
+- **Output**:
+  - AI-generated analysis of team performance
+  - Actionable recommendations for improvement
+  - Detailed team metrics table
+
+## 3. Technical Architecture
+
+### Frontend: Next.js Chat Interface
+```typescript
+// Uses Vercel AI SDK's useChat hook pattern
+const { messages, input, handleInputChange, handleSubmit } = useChat({
+  api: '/api/chat'
+});
+```
+
+**Components:**
+- **Chat Interface**: Single page using `useChat` hook for message management
+- **Message Display**: Shows both AI text responses and structured data tables
+- **Input Handling**: Natural language input processed by AI to determine analysis type
+- **Real-time Streaming**: Messages stream in real-time using the AI SDK's streaming capabilities
+
+### Backend: Next.js API Route with AI Tools
+```typescript
+// API route pattern from Vercel AI SDK
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+  
+  const result = streamText({
+    model: openai('gpt-4o'),
+    system: 'You are a budget analysis assistant...',
+    messages,
+    tools: {
+      getExecutiveSummary: { /* ... */ },
+      getTeamPerformance: { /* ... */ }
+    }
+  });
+  
+  return result.toDataStreamResponse();
+}
+```
+
+**Architecture:**
+- **Single API Endpoint**: `/api/chat` handles all budget analysis requests
+- **AI-Driven Tool Selection**: OpenAI model determines which tool to invoke based on user input
+- **Tool Execution**: Each tool fetches data, performs analysis, and returns structured results
+- **Streaming Response**: AI generates explanatory text while tool data is displayed
+
+### Data Integration Layer
+- **Database Connection**: `SQLAlchemy` for MSSQL billed hours data
+- **File Processing**: `Pandas` for CSV budget data processing
+- **Data Analysis**: `Pandas` DataFrames for all calculations and aggregations
+- **Schema Validation**: `Zod` schemas for tool inputs and outputs
+
+### AI Integration
+- **Model**: Azure OpenAI GPT-4 for natural language understanding and response generation
+- **Tool Definitions**: Zod-validated tool schemas integrated with Vercel AI SDK
+- **Streaming**: Real-time response generation using `streamText`
+
+## 4. Development Roadmap (MVP)
+
+### Phase 1: Core Infrastructure (Week 1-2)
+- **Chat Interface Setup**:
+  - Create Next.js app with Vercel AI SDK integration
+  - Implement basic chat UI using `useChat` hook
+  - Set up `/api/chat` route with `streamText`
+- **Data Integration Foundation**:
+  - Set up MSSQL connection via SQLAlchemy
+  - Build CSV file processing utilities
+  - Create basic data mapping utilities
+
+### Phase 2: Analysis Tools Implementation (Week 2-3)
+- **Tool Development**:
+  - Implement `getExecutiveSummary` tool with Zod schema
+  - Implement `getTeamPerformance` tool with Zod schema
+  - Integrate tools with Vercel AI SDK tool system
+- **AI Integration**:
+  - Configure Azure OpenAI model integration
+  - Define system prompts for budget analysis context
+  - Test tool invocation based on natural language inputs
+
+### Phase 3: UI Enhancement & Deployment (Week 3-4)
+- **Enhanced Chat Display**:
+  - Implement structured data table display in chat
+  - Add loading states for tool execution
+  - Style chat interface for professional appearance
+- **Testing & Deployment**:
+  - End-to-end testing of chat interactions
+  - Deploy to Vercel platform
+  - Configure environment variables and API keys
+
+## 5. Implementation Patterns
+
+### Chat Interface Pattern
+```typescript
+'use client';
+import { useChat } from '@ai-sdk/react';
+
+export default function BudgetChat() {
+  const { messages, input, handleInputChange, handleSubmit } = useChat();
+  
+  return (
+    <div>
+      {messages.map(message => (
+        <div key={message.id}>
+          {message.role === 'user' ? 'You: ' : 'Budget Assistant: '}
+          {message.content}
+          {/* Display tool results if present */}
+          {message.toolInvocations && renderToolResults(message.toolInvocations)}
+        </div>
+      ))}
+      <form onSubmit={handleSubmit}>
+        <input 
+          value={input} 
+          onChange={handleInputChange}
+          placeholder="Ask about budget performance..."
+        />
+      </form>
+    </div>
+  );
+}
+```
+
+### Tool Definition Pattern
+```typescript
+import { tool } from 'ai';
+import { z } from 'zod';
+
+const tools = {
+  getExecutiveSummary: tool({
+    description: 'Get executive summary of budget performance',
+    parameters: z.object({
+      period: z.string().describe('Time period for analysis'),
+      organization: z.string().optional()
+    }),
+    execute: async ({ period, organization }) => {
+      // Fetch and analyze data using Pandas
+      // Return structured results
+      return { metrics: {}, recommendations: [] };
+    }
+  }),
+  getTeamPerformance: tool({
+    description: 'Analyze specific team budget performance',
+    parameters: z.object({
+      teamName: z.string(),
+      period: z.string()
+    }),
+    execute: async ({ teamName, period }) => {
+      // Team-specific analysis
+      return { teamMetrics: {}, individualPerformance: [] };
+    }
+  })
+};
+```
+
+## 6. User Interaction Flow
+
+1. **User Request**: "How is the development team performing this month?"
+2. **AI Processing**: Model understands request and invokes `getTeamPerformance` tool
+3. **Tool Execution**: Fetches team data, performs analysis, returns structured results
+4. **AI Response**: Generates natural language explanation of findings
+5. **Display**: Shows both AI explanation and raw data table in chat
+6. **Follow-up**: User can ask clarifying questions or request different analyses
+
+## 7. Future Enhancements (Post-MVP)
+
+- **Additional Analysis Tools**: Budget projections, variance deep-dives, trend analysis
+- **Advanced Chat Features**: Conversation history, export functionality, shared conversations
+- **Enhanced Visualizations**: Charts and graphs integrated into chat responses  
+- **User Authentication**: Role-based access to different analysis tools
+- **Real-time Data**: Live data connections for up-to-the-minute analysis
+
+---
+
+This MVP leverages the Vercel AI SDK's powerful tool system to create a natural, conversational interface for budget analysis, delivering immediate value while maintaining a simple, focused scope.
