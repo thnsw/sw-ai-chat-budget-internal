@@ -1,2 +1,2 @@
 export { getExecutiveSummary } from '@/lib/ai/tools/executive-summary';
-export { getTeamPerformance } from '@/lib/ai/tools/team-performance'; 
+// Note: getTeamPerformance tool skipped as per task requirements 

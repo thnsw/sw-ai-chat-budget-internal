@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { getExecutiveSummaryAnalysis } from '../src/lib/data/executiveSummaryData';
+import { getExecutiveSummaryAnalysis } from '../src/lib/ai/data/executiveSummaryData';
 
 async function testExecutiveSummary() {
   console.log('🧪 Testing Executive Summary Data Analysis Function');

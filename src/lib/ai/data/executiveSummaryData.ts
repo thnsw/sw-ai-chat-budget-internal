@@ -1,6 +1,6 @@
 import { executeQuery } from '@/lib/database/connection';
 import { getBudgetDataForPeriod, ProcessedBudgetData, convertPeriodToCode } from '@/lib/data/csvReader';
-import { extractInitials, formatEmployeeNameForDatabase } from '@/lib/utils/employeeMapping';
+import { extractInitials } from '@/lib/utils/employeeMapping';
 import { formatTeamNameForDisplay } from '@/lib/utils/teamMapping';
 
 export interface DatabaseEmployeeData {
@@ -82,8 +82,6 @@ export async function fetchBilledHoursData(period: string): Promise<DatabaseEmpl
   }
 }
 
-
-
 /**
  * Match database employees with CSV budget data
  */
@@ -130,8 +128,18 @@ function matchEmployeeData(
 /**
  * Generate team summary from employee analysis
  */
-function generateTeamSummary(employeeAnalysis: EmployeeAnalysis[]): Record<string, any> {
-  const teamSummary: Record<string, any> = {};
+function generateTeamSummary(employeeAnalysis: EmployeeAnalysis[]): Record<string, {
+  budgeted: number;
+  billed: number;
+  variance: number;
+  employeeCount: number;
+}> {
+  const teamSummary: Record<string, {
+    budgeted: number;
+    billed: number;
+    variance: number;
+    employeeCount: number;
+  }> = {};
 
   for (const employee of employeeAnalysis) {
     if (!teamSummary[employee.team]) {

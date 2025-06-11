@@ -1,16 +1,27 @@
 import { tool } from 'ai';
 import { executiveSummaryParamsSchema } from '@/lib/schemas/chat';
-import { getExecutiveSummaryAnalysis } from '@/lib/data/executiveSummaryData';
+import { getExecutiveSummaryAnalysis } from '@/lib/ai/data/executiveSummaryData';
 
 export const getExecutiveSummary = tool({
-  description: 'Get executive summary of budget performance with key metrics and recommendations',
+  description: `Generate comprehensive executive summary of budget performance including total budgeted vs billed hours, budget variance analysis, team performance breakdown, and actionable recommendations. Use this when users ask about:
+  - Executive summary or overview
+  - Budget performance or status
+  - How teams are doing overall
+  - Budget variance analysis
+  - Utilization rates
+  
+  Parameters:
+  - period: Required time period (e.g., "May 2025", "June 2025", "Q1 2024")
+  - team: Optional team filter to focus on specific team (if not provided, analyzes all teams)`,
   parameters: executiveSummaryParamsSchema,
   execute: async ({ period, team }) => {
+    const startTime = Date.now();
+    console.log(`[Executive Summary Tool] Starting analysis - Period: ${period}, Team: ${team || 'All Teams'}`);
+    
     try {
-      console.log(`Generating executive summary for period: ${period}, team: ${team || 'All Teams'}`);
-      
       // Fetch and analyze real data
       const analysisData = await getExecutiveSummaryAnalysis(period);
+      console.log(`[Executive Summary Tool] Data analysis completed in ${Date.now() - startTime}ms`);
       
       // Generate recommendations based on the analysis
       const recommendations: string[] = [];
@@ -64,7 +75,7 @@ export const getExecutiveSummary = tool({
       const employeesUnderBudget = analysisData.employeeAnalysis.filter(emp => emp.variance < 0).length;
       const employeesOnTrack = analysisData.employeeAnalysis.filter(emp => Math.abs(emp.variancePercentage) <= 5).length;
 
-      return {
+      const result = {
         period,
         team: team || 'All Teams',
         totalBudgeted: analysisData.totalBudgeted,
@@ -84,9 +95,12 @@ export const getExecutiveSummary = tool({
         recommendations,
         alerts
       };
+
+      console.log(`[Executive Summary Tool] Analysis completed successfully - ${Object.keys(analysisData.teamSummary).length} teams, ${analysisData.employeeAnalysis.length} employees analyzed`);
+      return result;
       
     } catch (error) {
-      console.error('Executive summary tool error:', error);
+      console.error(`[Executive Summary Tool] Error after ${Date.now() - startTime}ms:`, error);
       
       // Fallback to basic error response
       return {

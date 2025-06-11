@@ -61,9 +61,9 @@ export async function createConnection(): Promise<sql.ConnectionPool> {
 }
 
 // Execute a query with error handling
-export async function executeQuery<T = any>(
+export async function executeQuery<T = unknown>(
   query: string,
-  parameters?: Record<string, any>
+  parameters?: Record<string, string | number | boolean | null>
 ): Promise<sql.IResult<T>> {
   let connection: sql.ConnectionPool | null = null;
   
@@ -103,7 +103,7 @@ export async function executeQuery<T = any>(
 export async function testConnection(): Promise<boolean> {
   try {
     console.log('Testing database connection...');
-    const result = await executeQuery('SELECT 1 as test');
+    const result = await executeQuery<{ test: number }>('SELECT 1 as test');
     
     if (result.recordset.length > 0 && result.recordset[0].test === 1) {
       console.log('Database connection test passed');

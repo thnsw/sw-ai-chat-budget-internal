@@ -1,0 +1,17 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# How to get context
+
+### Context7
+* Always use the **Context7 MCP Server** to reference documentation for popular libraries like Vercel AI SDK and others.
+* For the tokens always use **5000 tokens** when searching for documentation
+* Only **use few amount of keywords** to search documents for, if the search fails reduce the amount of keywords.
+* Use context7 to get documentation of before starting each task or subtask.
+* Popular sourced IDs are: 
+- /vercel/sdk
+- /vercel/ai
+
+* Always use context7 to get documentation before implementing a subtask.
